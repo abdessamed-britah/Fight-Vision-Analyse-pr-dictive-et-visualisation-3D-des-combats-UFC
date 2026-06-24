@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>⚡ FightVision UFC — Moteur d'analyse</title>
+  <title>FightVision UFC — Moteur d'analyse</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <!-- Three.js r128 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -17,152 +17,108 @@
   </script>
 
   <style>
-    /* ── Reset & Tokens ───────────────────────────────────── */
+    /* ── Reset & Tokens — sports-data editorial ──────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --bg:        #05050a;
-      --bg-2:      #0b0b16;
-      --surface:   #0f0f1e;
-      --card:      #11111f;
-      --steel:     #2b2f44;
-      --steel-2:   #1a1d2c;
-      --gold:      #f0b429;
-      --red:       #e53e3e;
-      --blue:      #3182ce;
-      --text:      #e7e9f0;
-      --muted:     #7d8198;
-      --glow-gold: rgba(240,180,41,.35);
-      --glow-red:  rgba(229,62,62,.35);
-      --glow-blue: rgba(49,130,206,.35);
+      --bg:        #0b0d12;
+      --bg-2:      #11131a;
+      --surface:   #15171f;
+      --card:      #181a23;
+      --border:    #272a35;
+      --red:       #d6263c;
+      --blue:      #1f6fc4;
+      --accent:    #e2a23b;
+      --text:      #eef0f3;
+      --text-soft: #c7cad3;
+      --muted:     #868a96;
 
-      --f-display: 'Anton','Arial Narrow',Impact,sans-serif;
-      --f-mono:    'JetBrains Mono','Consolas',monospace;
+      --f-display: 'Oswald','Arial Narrow',sans-serif;
       --f-body:    'Inter','Segoe UI',system-ui,sans-serif;
     }
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--f-body); overflow-x: hidden; }
-    h1,h2,h3 { font-family: var(--f-display); text-transform: uppercase; line-height: .95; letter-spacing: .01em; }
+    h1,h2,h3 { font-family: var(--f-display); font-weight: 600; line-height: 1.1; }
 
-    .eyebrow {
-      font-family: var(--f-mono); font-size: .72rem; font-weight: 700;
-      letter-spacing: .3em; text-transform: uppercase; color: var(--gold);
-      display: flex; align-items: center; gap: .6rem; justify-content: center;
-    }
-    .eyebrow::before, .eyebrow::after { content:''; width: 18px; height: 1px; background: var(--gold); }
-
-    /* ── Background texture ──────────────────────────────── */
-    .grid-bg {
-      position: fixed; inset: 0; pointer-events: none; z-index: 0;
-      background-image:
-        linear-gradient(rgba(240,180,41,.045) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(240,180,41,.045) 1px, transparent 1px);
-      background-size: 48px 48px;
-      mask-image: radial-gradient(ellipse 70% 50% at 50% 0%, black 30%, transparent 80%);
+    .tag {
+      display: inline-flex; align-items: center; gap: .5rem; justify-content: center;
+      font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+      color: var(--accent); border-bottom: 2px solid var(--accent); padding-bottom: .3rem;
     }
 
     /* ── Nav ──────────────────────────────────────────────── */
     nav {
       position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between;
-      padding: 1.1rem 2rem; border-bottom: 1px solid var(--steel); background: rgba(5,5,10,.6);
+      padding: 1rem 2rem; border-bottom: 1px solid var(--border); background: var(--bg);
     }
-    .logo { font-family: var(--f-display); font-size: 1.25rem; letter-spacing: .02em; display:flex; align-items:center; gap:.5rem; }
-    .logo .dot { color: var(--gold); }
+    .logo { font-family: var(--f-display); font-size: 1.15rem; font-weight: 700; display:flex; align-items:center; gap:.45rem; }
+    .logo .dot { color: var(--red); }
     .nav-back {
-      font-family: var(--f-mono); font-size: .72rem; letter-spacing: .1em; text-transform: uppercase;
-      color: var(--muted); border: 1px solid var(--steel); padding: .5rem 1.1rem;
-      clip-path: polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);
-      transition: color .2s, border-color .2s;
+      font-size: .82rem; color: var(--muted); border: 1px solid var(--border); padding: .5rem 1.1rem;
+      border-radius: 5px; transition: color .15s, border-color .15s;
     }
-    .nav-back:hover { color: var(--gold); border-color: var(--gold); }
+    .nav-back:hover { color: var(--text); border-color: var(--text-soft); }
 
     /* ── Header ──────────────────────────────────────────── */
-    header { position: relative; text-align: center; padding: 3rem 1rem 1.6rem; z-index: 1; }
-    header h1 {
-      font-size: clamp(2.4rem, 6vw, 4.2rem); margin: .7rem 0 .8rem;
-      background: linear-gradient(95deg, var(--red) 0%, var(--gold) 45%, var(--blue) 100%);
-      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-      filter: drop-shadow(0 0 30px rgba(240,180,41,.15));
-    }
-    header p.lead { color: var(--muted); margin-top: .2rem; font-size: .98rem; max-width: 560px; margin-left:auto; margin-right:auto; }
+    header { position: relative; text-align: center; padding: 2.6rem 1rem 1.4rem; }
+    header h1 { font-size: clamp(2rem, 4.6vw, 2.9rem); margin: .6rem 0 .7rem; color: var(--text); }
+    header p.lead { color: var(--muted); margin-top: .2rem; font-size: .96rem; max-width: 560px; margin-left:auto; margin-right:auto; }
 
     /* ── Selector panel ───────────────────────────────────── */
-    .selector-wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto 0; padding: 0 1.5rem; }
+    .selector-wrap { position: relative; max-width: 1100px; margin: 0 auto 0; padding: 0 1.5rem; }
     .selector {
       display: flex; align-items: center; justify-content: center; gap: 1.5rem;
-      flex-wrap: wrap; padding: 1.8rem 2rem;
-      background: linear-gradient(165deg,var(--card),var(--surface)); border: 1px solid var(--steel);
-      clip-path: polygon(0 16px,16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%);
-      position: relative;
+      flex-wrap: wrap; padding: 1.5rem 1.8rem;
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
     }
-    .selector::before, .selector::after { content:''; position:absolute; width:20px; height:20px; pointer-events:none; }
-    .selector::before { top:-1px; left:-1px; border-top:2px solid var(--gold); border-left:2px solid var(--gold); }
-    .selector::after  { bottom:-1px; right:-1px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold); }
 
-    .fighter-pick { display: flex; flex-direction: column; gap: .45rem; min-width: 220px; }
-    .fighter-pick label { font-family: var(--f-mono); font-size: .72rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
+    .fighter-pick { display: flex; flex-direction: column; gap: .4rem; min-width: 220px; }
+    .fighter-pick label { font-size: .76rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
     .fighter-pick.red  label { color: var(--red); }
     .fighter-pick.blue label { color: var(--blue); }
     select {
       background: var(--bg-2); color: var(--text); font-family: var(--f-body);
-      border: 1.5px solid var(--steel); padding: .6rem .9rem; font-size: .95rem; cursor: pointer;
-      transition: border-color .2s;
+      border: 1px solid var(--border); border-radius: 5px; padding: .6rem .9rem; font-size: .95rem; cursor: pointer;
+      transition: border-color .15s;
     }
-    select:focus { outline: none; border-color: var(--gold); }
-    .vs-badge {
-      font-family: var(--f-display); font-size: 1.5rem; color: var(--gold);
-      text-shadow: 0 0 20px rgba(240,180,41,.4);
-    }
+    select:focus { outline: none; border-color: var(--text-soft); }
+    .vs-badge { font-family: var(--f-display); font-size: 1.3rem; font-weight: 700; color: var(--muted); }
     #btn-analyze {
-      font-family: var(--f-mono); background: linear-gradient(135deg, var(--red), #9b2335);
-      color: white; border: none;
-      padding: .85rem 2.1rem; font-size: .85rem; font-weight: 700;
-      cursor: pointer; letter-spacing: .12em; text-transform: uppercase;
-      clip-path: polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
-      transition: transform .15s, box-shadow .15s;
+      font-family: var(--f-body); background: var(--red); color: white; border: none; border-radius: 5px;
+      padding: .8rem 1.9rem; font-size: .9rem; font-weight: 700; cursor: pointer;
+      transition: background .15s;
     }
-    #btn-analyze:hover { transform: translateY(-2px); box-shadow: 0 8px 26px var(--glow-red); }
+    #btn-analyze:hover { background: #b81f33; }
 
     /* ── Prediction banner ───────────────────────────────── */
-    #prediction-banner { display: none; margin: 1.8rem auto; max-width: 700px; padding: 0 1.5rem; position: relative; z-index: 1; }
+    #prediction-banner { display: none; margin: 1.6rem auto; max-width: 700px; padding: 0 1.5rem; position: relative; }
     .banner-inner {
-      background: linear-gradient(165deg,var(--card),var(--surface)); border: 1px solid var(--steel);
-      padding: 1.6rem 2rem; text-align: center; position: relative;
-      clip-path: polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);
+      background: var(--card); border: 1px solid var(--border); border-radius: 6px;
+      padding: 1.4rem 2rem; text-align: center; position: relative;
     }
-    .banner-inner::before, .banner-inner::after { content:''; position:absolute; width:18px; height:18px; pointer-events:none; }
-    .banner-inner::before { top:-1px; left:-1px; border-top:2px solid var(--gold); border-left:2px solid var(--gold); }
-    .banner-inner::after  { bottom:-1px; right:-1px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold); }
-    .banner-inner .winner-label { font-family: var(--f-mono); font-size: .72rem; color: var(--muted); text-transform: uppercase; letter-spacing: .18em; }
-    .banner-inner .winner-name  { font-family: var(--f-display); font-size: 2.2rem; margin: .35rem 0; }
-    .proba-bar { display: flex; height: 8px; overflow: hidden; margin-top: .9rem; background: var(--steel-2); }
-    .proba-red  { background: linear-gradient(90deg,#9b2335,var(--red));  transition: width .6s ease; }
-    .proba-blue { background: linear-gradient(90deg,var(--blue),#1a4a72); transition: width .6s ease; flex: 1; }
-    .proba-labels { display: flex; justify-content: space-between; margin-top: .4rem; font-family: var(--f-mono); font-size: .76rem; }
+    .banner-inner .winner-label { font-size: .76rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-weight: 700; }
+    .banner-inner .winner-name  { font-family: var(--f-display); font-weight: 700; font-size: 2rem; margin: .3rem 0; }
+    .proba-bar { display: flex; height: 6px; overflow: hidden; margin-top: .9rem; border-radius: 3px; background: var(--bg-2); }
+    .proba-red  { background: var(--red);  transition: width .6s ease; }
+    .proba-blue { background: var(--blue); transition: width .6s ease; flex: 1; }
+    .proba-labels { display: flex; justify-content: space-between; margin-top: .4rem; font-size: .82rem; font-variant-numeric: tabular-nums; }
     .proba-labels .r { color: var(--red); font-weight: 700; }
     .proba-labels .b { color: var(--blue); font-weight: 700; }
 
     /* ── Main grid ────────────────────────────────────────── */
     .grid {
-      position: relative; z-index: 1;
+      position: relative;
       display: grid;
       grid-template-columns: 1fr 1fr;
       grid-template-rows: auto auto;
-      gap: 1.1rem; padding: 1.6rem 1.5rem 2.5rem;
+      gap: 1rem; padding: 1.5rem 1.5rem 2.5rem;
       max-width: 1400px; margin: 0 auto;
     }
     @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
 
-    .panel {
-      position: relative;
-      background: linear-gradient(165deg,var(--card),var(--surface)); border: 1px solid var(--steel);
-      clip-path: polygon(0 16px,16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%);
-    }
-    .panel::before, .panel::after { content:''; position:absolute; width:20px; height:20px; pointer-events:none; }
-    .panel::before { top:-1px; left:-1px; border-top:2px solid var(--gold); border-left:2px solid var(--gold); }
-    .panel::after  { bottom:-1px; right:-1px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold); }
+    .panel { position: relative; background: var(--card); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
     .panel-title {
-      padding: 1rem 1.3rem; font-family: var(--f-mono); font-size: .74rem; font-weight: 700;
-      letter-spacing: .16em; text-transform: uppercase; color: var(--gold);
-      border-bottom: 1px solid var(--steel);
+      padding: .9rem 1.2rem; font-size: .76rem; font-weight: 700;
+      letter-spacing: .04em; text-transform: uppercase; color: var(--text-soft);
+      border-bottom: 1px solid var(--border);
     }
     .panel-body { padding: 1rem; }
 
@@ -175,20 +131,20 @@
 
     /* ── Stats table ──────────────────────────────────────── */
     .stats-grid {
-      display: grid; grid-template-columns: 1fr auto 1fr; gap: .55rem .8rem;
-      align-items: center; font-family: var(--f-mono); font-size: .9rem;
+      display: grid; grid-template-columns: 1fr auto 1fr; gap: .5rem .8rem;
+      align-items: center; font-size: .9rem; font-variant-numeric: tabular-nums;
     }
-    .stat-label { text-align: center; color: var(--muted); font-size: .72rem; grid-column: 2; text-transform: uppercase; letter-spacing: .04em; }
+    .stat-label { text-align: center; color: var(--muted); font-size: .74rem; grid-column: 2; text-transform: uppercase; letter-spacing: .02em; }
     .stat-r { text-align: right; color: var(--red); font-weight: 700; }
     .stat-b { text-align: left; color: var(--blue); font-weight: 700; }
     .stat-row { display: contents; }
     .stat-row.header .stat-r,
-    .stat-row.header .stat-b { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); font-family: var(--f-body); }
+    .stat-row.header .stat-b { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); }
 
     /* ── Heatmap legend ───────────────────────────────────── */
-    .legend { display: flex; gap: 1.5rem; justify-content: center; padding: .7rem 1rem; border-top: 1px solid var(--steel); }
-    .legend-item { display: flex; align-items: center; gap: .4rem; font-family: var(--f-mono); font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
-    .legend-dot { width: 10px; height: 10px; }
+    .legend { display: flex; gap: 1.5rem; justify-content: center; padding: .7rem 1rem; border-top: 1px solid var(--border); }
+    .legend-item { display: flex; align-items: center; gap: .4rem; font-size: .78rem; color: var(--muted); }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
 
     /* ── Placeholder ──────────────────────────────────────── */
     .placeholder {
@@ -199,23 +155,21 @@
     .placeholder span { font-size: 2.5rem; }
 
     footer {
-      position: relative; z-index: 1; text-align: center; padding: 2.4rem 1.5rem; color: var(--muted);
-      font-family: var(--f-mono); font-size: .76rem; letter-spacing: .05em; border-top: 1px solid var(--steel);
+      position: relative; text-align: center; padding: 2rem 1.5rem; color: var(--muted);
+      font-size: .82rem; border-top: 1px solid var(--border);
     }
-    footer a { color: var(--gold); }
+    footer a { color: var(--accent); }
   </style>
 </head>
 <body>
 
-<div class="grid-bg"></div>
-
 <nav>
-  <div class="logo">⚡ FIGHTVISION<span class="dot">.</span></div>
+  <div class="logo">FIGHTVISION<span class="dot">.</span></div>
   <a href="landing.html" class="nav-back">← Accueil</a>
 </nav>
 
 <header>
-  <div class="eyebrow">Moteur d'analyse</div>
+  <div class="tag">Moteur d'analyse</div>
   <h1>Analyse de combat</h1>
   <p class="lead">Sélectionne deux combattants pour générer la prédiction, le radar comparatif et l'octogone 3D.</p>
 </header>
@@ -224,22 +178,22 @@
 <div class="selector-wrap">
   <div class="selector">
     <div class="fighter-pick red">
-      <label>🔴 Red Corner</label>
+      <label>Red Corner</label>
       <select id="sel-red"><option value="">-- Choisir --</option></select>
     </div>
     <div class="vs-badge">VS</div>
     <div class="fighter-pick blue">
-      <label>🔵 Blue Corner</label>
+      <label>Blue Corner</label>
       <select id="sel-blue"><option value="">-- Choisir --</option></select>
     </div>
-    <button id="btn-analyze">⚡ ANALYSER</button>
+    <button id="btn-analyze">Analyser</button>
   </div>
 </div>
 
 <!-- Prediction banner -->
 <div id="prediction-banner">
   <div class="banner-inner">
-    <div class="winner-label">🏆 Prédiction ML — Vainqueur probable</div>
+    <div class="winner-label">Prédiction ML — Vainqueur probable</div>
     <div class="winner-name" id="winner-name">—</div>
     <div class="proba-bar">
       <div class="proba-red"  id="bar-red"  style="width:50%"></div>
@@ -257,18 +211,18 @@
 
   <!-- Three.js octagon -->
   <div class="panel" id="canvas-panel">
-    <div class="panel-title">🏟️ Octogone 3D — Zones de frappe (Three.js)</div>
+    <div class="panel-title">Octogone 3D — Zones de frappe</div>
     <canvas id="three-canvas"></canvas>
     <div class="legend">
       <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Red corner</div>
       <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div> Blue corner</div>
-      <div class="legend-item"><div class="legend-dot" style="background:var(--gold)"></div> Zone neutre</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div> Zone neutre</div>
     </div>
   </div>
 
   <!-- Radar chart -->
   <div class="panel">
-    <div class="panel-title">🕸️ Radar — Attributs comparatifs</div>
+    <div class="panel-title">Radar — Attributs comparatifs</div>
     <div class="panel-body">
       <canvas id="radar-canvas" height="340"></canvas>
     </div>
@@ -276,7 +230,7 @@
 
   <!-- Stats table -->
   <div class="panel">
-    <div class="panel-title">📊 Statistiques face à face</div>
+    <div class="panel-title">Statistiques face à face</div>
     <div class="panel-body">
       <div class="stats-grid" id="stats-grid">
         <div class="placeholder" style="grid-column:1/-1">
@@ -371,11 +325,11 @@ function initThree() {
   spot.castShadow = true;
   scene.add(spot);
 
-  const redLight = new THREE.PointLight(0xe53e3e, 1.5, 10);
+  const redLight = new THREE.PointLight(0xd6263c, 1.5, 10);
   redLight.position.set(-4, 3, 0);
   scene.add(redLight);
 
-  const blueLight = new THREE.PointLight(0x3182ce, 1.5, 10);
+  const blueLight = new THREE.PointLight(0x1f6fc4, 1.5, 10);
   blueLight.position.set(4, 3, 0);
   scene.add(blueLight);
 
@@ -509,8 +463,8 @@ function buildOctagon() {
   // Chain-link cage walls + corner posts with pads
   const chainTex = createChainLinkTexture();
   chainTex.repeat.set(3, 1.4);
-  const goldMat = new THREE.LineBasicMaterial({ color: 0xf0b429, linewidth: 2 });
-  const cornerPadColors = [0xe53e3e, 0xf0b429, 0x3182ce, 0xf0b429, 0xe53e3e, 0xf0b429, 0x3182ce, 0xf0b429];
+  const goldMat = new THREE.LineBasicMaterial({ color: 0xe2a23b, linewidth: 2 });
+  const cornerPadColors = [0xd6263c, 0xe2a23b, 0x1f6fc4, 0xe2a23b, 0xd6263c, 0xe2a23b, 0x1f6fc4, 0xe2a23b];
 
   for (let i = 0; i < SIDES; i++) {
     const a0 = pts[i], a1 = pts[(i+1) % SIDES];
@@ -525,7 +479,7 @@ function buildOctagon() {
 
     // Top rail (slightly thicker via a thin box for a "real" fence top bar)
     const railGeo = new THREE.BoxGeometry(a0.distanceTo(a1), 0.04, 0.04);
-    const railMat = new THREE.MeshStandardMaterial({ color: 0xf0b429, metalness: 0.6, roughness: 0.3, emissive: 0xf0b429, emissiveIntensity: 0.15 });
+    const railMat = new THREE.MeshStandardMaterial({ color: 0xe2a23b, metalness: 0.6, roughness: 0.3, emissive: 0xe2a23b, emissiveIntensity: 0.15 });
     const rail = new THREE.Mesh(railGeo, railMat);
     const midX = (a0.x + a1.x) / 2, midZ = (a0.y + a1.y) / 2;
     rail.position.set(midX, WALL_H, midZ);
@@ -574,13 +528,13 @@ function buildOctagon() {
   scene.add(rigGlow); octMeshes.push(rigGlow);
 
   // Crowd-glow ring: soft sprites around the arena to suggest stands/atmosphere
-  const glowTexGold = createGlowSpriteTexture(0xf0b429);
+  const glowTexGold = createGlowSpriteTexture(0xe2a23b);
   const CROWD_N = 36;
   for (let i = 0; i < CROWD_N; i++) {
     const a = (i / CROWD_N) * Math.PI * 2;
     const rr = 13 + Math.sin(i * 3.1) * 0.6;
     const spriteMat = new THREE.SpriteMaterial({
-      map: glowTexGold, color: 0xf0b429, transparent: true,
+      map: glowTexGold, color: 0xe2a23b, transparent: true,
       opacity: 0.12 + 0.06 * Math.sin(i * 1.7), depthWrite: false
     });
     const sprite = new THREE.Sprite(spriteMat);
@@ -600,8 +554,8 @@ function buildFighters(p1, p2, probaRed) {
   heatSpheres = [];
 
   const fightData = [
-    { x: -2.2, color: 0xe53e3e, prob: probaRed,       profile: p1, label: p1 ? p1.name.split(' ').pop() : 'RED'  },
-    { x:  2.2, color: 0x3182ce, prob: 1 - probaRed,   profile: p2, label: p2 ? p2.name.split(' ').pop() : 'BLUE' },
+    { x: -2.2, color: 0xd6263c, prob: probaRed,       profile: p1, label: p1 ? p1.name.split(' ').pop() : 'RED'  },
+    { x:  2.2, color: 0x1f6fc4, prob: 1 - probaRed,   profile: p2, label: p2 ? p2.name.split(' ').pop() : 'BLUE' },
   ];
 
   const SKIN = 0xd2a679;
@@ -725,7 +679,7 @@ function buildHeatmap(p1, p2) {
     const r1 = 0.35 + 1.1 * (v1 / total);
     const geo1 = new THREE.CircleGeometry(r1, 24);
     const mat1 = new THREE.MeshBasicMaterial({
-      map: getGlowTexture(0xe53e3e), color: 0xe53e3e, transparent: true,
+      map: getGlowTexture(0xd6263c), color: 0xd6263c, transparent: true,
       opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false
     });
     const s1 = new THREE.Mesh(geo1, mat1);
@@ -736,7 +690,7 @@ function buildHeatmap(p1, p2) {
     const r2 = 0.35 + 1.1 * (v2 / total);
     const geo2 = new THREE.CircleGeometry(r2, 24);
     const mat2 = new THREE.MeshBasicMaterial({
-      map: getGlowTexture(0x3182ce), color: 0x3182ce, transparent: true,
+      map: getGlowTexture(0x1f6fc4), color: 0x1f6fc4, transparent: true,
       opacity: 0.7, blending: THREE.AdditiveBlending, depthWrite: false
     });
     const s2 = new THREE.Mesh(geo2, mat2);
@@ -828,7 +782,7 @@ function drawRadar(p1, p2) {
   ctx.clearRect(0, 0, W, W);
 
   // Background
-  ctx.fillStyle = '#0f0f1e'; ctx.fillRect(0,0,W,W);
+  ctx.fillStyle = '#15171f'; ctx.fillRect(0,0,W,W);
 
   // Grid rings
   [0.25, 0.5, 0.75, 1].forEach(r => {
@@ -838,7 +792,7 @@ function drawRadar(p1, p2) {
       i === 0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
     });
     ctx.closePath();
-    ctx.strokeStyle = r === 1 ? '#334466' : '#1a1a33';
+    ctx.strokeStyle = r === 1 ? '#3a3e4a' : '#23262f';
     ctx.lineWidth = r === 1 ? 1.5 : 1;
     ctx.stroke();
   });
@@ -848,12 +802,12 @@ function drawRadar(p1, p2) {
     ctx.beginPath();
     ctx.moveTo(cx, cy);
     ctx.lineTo(cx + R*Math.cos(a), cy + R*Math.sin(a));
-    ctx.strokeStyle = '#222244'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = '#272a35'; ctx.lineWidth = 1; ctx.stroke();
 
     // Labels
     const lx = cx + (R + 22) * Math.cos(a);
     const ly = cy + (R + 22) * Math.sin(a);
-    ctx.fillStyle = '#718096'; ctx.font = `${W*0.033}px sans-serif`;
+    ctx.fillStyle = '#868a96'; ctx.font = `${W*0.033}px Inter, sans-serif`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText(cats[i], lx, ly);
   });
@@ -880,15 +834,15 @@ function drawRadar(p1, p2) {
     });
   }
 
-  drawPoly(p2, '#3182ce');
-  drawPoly(p1, '#e53e3e');
+  drawPoly(p2, '#1f6fc4');
+  drawPoly(p1, '#d6263c');
 
   // Legend
   const ly = W * 0.94;
-  [['#e53e3e', p1.name], ['#3182ce', p2.name]].forEach(([c, name], i) => {
+  [['#d6263c', p1.name], ['#1f6fc4', p2.name]].forEach(([c, name], i) => {
     const lx = W * (0.18 + i * 0.5);
     ctx.fillStyle = c; ctx.fillRect(lx, ly, 14, 14);
-    ctx.fillStyle = '#e2e8f0'; ctx.font = `${W*0.032}px sans-serif`;
+    ctx.fillStyle = '#eef0f3'; ctx.font = `${W*0.032}px Inter, sans-serif`;
     ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
     ctx.fillText(name.split(' ').pop(), lx + 18, ly + 7);
   });
@@ -898,6 +852,7 @@ function drawRadar(p1, p2) {
 function renderStats(p1, p2, proba) {
   const grid = document.getElementById('stats-grid');
   const rows = [
+    ['Style (clustering)', p1.style || '—', p2.style || '—'],
     ['Victoires',       p1.wins,           p2.wins],
     ['Défaites',        p1.losses,         p2.losses],
     ['KO / TKO',        p1.KO_wins,        p2.KO_wins],

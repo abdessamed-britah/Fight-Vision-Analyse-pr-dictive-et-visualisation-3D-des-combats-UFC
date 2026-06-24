@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# Generated model artifacts (regenerate with: python jour1_model.py)
+outputs/*.pkl
+outputs/feature_names.csv
+
+# Node (npx serve cache, if any)
+node_modules/
+
+# Claude Code local state
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp

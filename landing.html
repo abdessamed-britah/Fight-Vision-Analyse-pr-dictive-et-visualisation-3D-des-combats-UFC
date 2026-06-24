@@ -8,331 +8,243 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
 /* ════════════════════════════════════════════════════════════
-   TOKENS
+   TOKENS — sports-data editorial (ESPN / Sofascore / Bleacher Report)
 ═══════════════════════════════════════════════════════════ */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --bg:        #05050a;
-  --bg-2:      #0b0b16;
-  --surface:   #0f0f1e;
-  --card:      #11111f;
-  --steel:     #2b2f44;
-  --steel-2:   #1a1d2c;
-  --gold:      #f0b429;
-  --red:       #e53e3e;
-  --blue:      #3182ce;
-  --text:      #e7e9f0;
-  --muted:     #7d8198;
-  --glow-gold: rgba(240,180,41,.35);
-  --glow-red:  rgba(229,62,62,.35);
-  --glow-blue: rgba(49,130,206,.35);
+  --bg:      #0b0d12;
+  --bg-2:    #11131a;
+  --surface: #15171f;
+  --card:    #181a23;
+  --border:  #272a35;
+  --red:     #d6263c;
+  --blue:    #1f6fc4;
+  --accent:  #e2a23b;
+  --text:    #eef0f3;
+  --text-soft:#c7cad3;
+  --muted:   #868a96;
 
-  --f-display: 'Anton','Arial Narrow',Impact,sans-serif;
-  --f-mono:    'JetBrains Mono','Consolas',monospace;
+  --f-display: 'Oswald','Arial Narrow',sans-serif;
   --f-body:    'Inter','Segoe UI',system-ui,sans-serif;
 }
 html{scroll-behavior:smooth}
-body{
-  background:var(--bg); color:var(--text); font-family:var(--f-body);
-  overflow-x:hidden; line-height:1.6;
-}
+body{ background:var(--bg); color:var(--text); font-family:var(--f-body); line-height:1.6; }
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 
-/* shared bg texture: grid + vignette */
-.grid-bg{
-  position:absolute; inset:0; pointer-events:none; z-index:0;
-  background-image:
-    linear-gradient(rgba(240,180,41,.05) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(240,180,41,.05) 1px, transparent 1px);
-  background-size:48px 48px;
-  mask-image: radial-gradient(ellipse 80% 60% at 50% 30%, black 40%, transparent 85%);
-}
-.vignette{
-  position:absolute; inset:0; pointer-events:none; z-index:1;
-  background: radial-gradient(ellipse 70% 60% at 50% 20%, transparent 0%, var(--bg) 90%);
-}
+h1,h2,h3,h4{font-family:var(--f-display); font-weight:600; line-height:1.08}
 
 /* ════════════════════════════════════════════════════════════
    PRIMITIVES
 ═══════════════════════════════════════════════════════════ */
-.eyebrow{
-  font-family:var(--f-mono); font-size:.72rem; font-weight:700;
-  letter-spacing:.32em; text-transform:uppercase; color:var(--gold);
-  display:flex; align-items:center; gap:.6rem;
+.tag{
+  display:inline-flex; align-items:center; gap:.5rem;
+  font-size:.72rem; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--accent); border-bottom:2px solid var(--accent); padding-bottom:.3rem;
 }
-.eyebrow::before{content:'';width:18px;height:1px;background:var(--gold)}
 
-h1,h2,h3{font-family:var(--f-display); text-transform:uppercase; line-height:.95; letter-spacing:.01em}
+.section{position:relative; padding:5.5rem 1.5rem; max-width:1200px; margin:0 auto}
+.section-head{max-width:620px; margin-bottom:2.6rem}
+.section-head h2{font-size:clamp(1.7rem,3.4vw,2.5rem); margin:.5rem 0 .9rem}
+.section-head p{color:var(--muted); font-size:1rem; max-width:560px}
 
-.section{position:relative; padding:7rem 1.5rem; max-width:1280px; margin:0 auto}
-.section-head{max-width:680px; margin-bottom:3.5rem}
-.section-head h2{font-size:clamp(2rem,4.4vw,3.2rem); margin:.6rem 0 1rem}
-.section-head p{color:var(--muted); font-size:1.02rem; max-width:560px}
-
-/* HUD panel: cut corners, no border-radius soup */
-.hud-panel{
-  position:relative; background:linear-gradient(165deg,var(--card),var(--surface));
-  border:1px solid var(--steel);
-  clip-path:polygon(0 14px,14px 0,100% 0,100% calc(100% - 14px),calc(100% - 14px) 100%,0 100%);
+.card{ background:var(--card); border:1px solid var(--border); border-radius:6px; }
+.card-label{
+  font-size:.72rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--text-soft); padding:.85rem 1.1rem; border-bottom:1px solid var(--border);
 }
-.hud-panel::before,.hud-panel::after{
-  content:''; position:absolute; width:18px; height:18px; pointer-events:none;
-  border-color:var(--gold); opacity:.8;
-}
-.hud-panel::before{top:-1px; left:-1px; border-top:2px solid var(--gold); border-left:2px solid var(--gold)}
-.hud-panel::after{bottom:-1px; right:-1px; border-bottom:2px solid var(--gold); border-right:2px solid var(--gold)}
 
-/* buttons */
 .btn{
-  font-family:var(--f-mono); font-size:.82rem; font-weight:700; letter-spacing:.12em;
-  text-transform:uppercase; padding:.95rem 2.1rem; cursor:pointer; border:none;
-  display:inline-flex; align-items:center; gap:.6rem; position:relative; overflow:hidden;
-  clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);
-  transition:transform .15s;
+  font-family:var(--f-body); font-size:.88rem; font-weight:700;
+  padding:.78rem 1.7rem; cursor:pointer; border:none; border-radius:5px;
+  display:inline-flex; align-items:center; gap:.5rem; transition:background .15s, color .15s, border-color .15s;
 }
-.btn:hover{transform:translateY(-2px)}
-.btn-primary{background:linear-gradient(135deg,var(--red),#9b2335); color:#fff; box-shadow:0 8px 30px var(--glow-red)}
-.btn-ghost{background:transparent; color:var(--text); border:1px solid var(--steel)}
-.btn-ghost:hover{border-color:var(--gold); color:var(--gold)}
-.btn-sweep::after{
-  content:''; position:absolute; inset:0; background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.25) 50%,transparent 60%);
-  transform:translateX(-120%); transition:transform .5s;
-}
-.btn-sweep:hover::after{transform:translateX(120%)}
+.btn-primary{background:var(--red); color:#fff}
+.btn-primary:hover{background:#b81f33}
+.btn-ghost{background:transparent; color:var(--text); border:1px solid var(--border)}
+.btn-ghost:hover{border-color:var(--text-soft)}
 
-/* reveal-on-scroll */
-.reveal{opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease}
+.reveal{opacity:0; transform:translateY(16px); transition:opacity .5s ease, transform .5s ease}
 .reveal.in{opacity:1; transform:translateY(0)}
 
 /* ════════════════════════════════════════════════════════════
    NAV
 ═══════════════════════════════════════════════════════════ */
 nav{
-  position:fixed; top:0; left:0; right:0; z-index:50;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:1.1rem 2rem; transition:background .3s, border-color .3s, padding .3s;
-  border-bottom:1px solid transparent;
+  position:sticky; top:0; z-index:50; display:flex; align-items:center; justify-content:space-between;
+  padding:1rem 2rem; background:var(--bg); border-bottom:1px solid var(--border);
 }
-nav.scrolled{background:rgba(5,5,10,.85); backdrop-filter:blur(10px); border-color:var(--steel); padding:.75rem 2rem}
-.logo{font-family:var(--f-display); font-size:1.3rem; letter-spacing:.02em; display:flex; align-items:center; gap:.5rem}
-.logo .dot{color:var(--gold)}
-.nav-links{display:flex; gap:2rem; font-family:var(--f-mono); font-size:.75rem; letter-spacing:.1em; text-transform:uppercase; color:var(--muted)}
+.logo{font-family:var(--f-display); font-size:1.2rem; font-weight:700; letter-spacing:.01em; display:flex; align-items:center; gap:.45rem}
+.logo .dot{color:var(--red)}
+.nav-links{display:flex; gap:1.8rem; font-size:.85rem; color:var(--muted)}
 .nav-links a:hover{color:var(--text)}
 @media (max-width:760px){.nav-links{display:none}}
 
 /* ════════════════════════════════════════════════════════════
    HERO
 ═══════════════════════════════════════════════════════════ */
-.hero{
-  position:relative; min-height:100vh; display:flex; flex-direction:column;
-  align-items:center; justify-content:center; text-align:center; padding:8rem 1.5rem 4rem;
-  overflow:hidden;
-}
-#hero-canvas{position:absolute; inset:0; z-index:0; opacity:.55}
-.hero-content{position:relative; z-index:2; max-width:920px}
-.hero .eyebrow{justify-content:center; margin-bottom:1.4rem}
-.hero .eyebrow::before{display:none}
-.hero h1{
-  font-size:clamp(2.8rem,9vw,6.4rem); margin-bottom:1.4rem;
-  background:linear-gradient(95deg,var(--red) 0%, var(--gold) 45%, var(--blue) 100%);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  filter:drop-shadow(0 0 40px rgba(240,180,41,.18));
-}
-.hero p.lead{font-size:1.08rem; color:var(--muted); max-width:600px; margin:0 auto 2.4rem}
-.hero-ctas{display:flex; gap:1rem; justify-content:center; flex-wrap:wrap}
-.scroll-hint{
-  position:absolute; bottom:2rem; left:50%; transform:translateX(-50%); z-index:2;
-  font-family:var(--f-mono); font-size:.7rem; letter-spacing:.2em; color:var(--muted);
-  display:flex; flex-direction:column; align-items:center; gap:.5rem;
-}
-.scroll-hint .line{width:1px; height:28px; background:linear-gradient(var(--gold),transparent); animation:scrollpulse 1.8s ease-in-out infinite}
-@keyframes scrollpulse{0%,100%{opacity:.2}50%{opacity:1}}
+.hero{ position:relative; padding:4.5rem 1.5rem 3rem; max-width:1200px; margin:0 auto; overflow:hidden; }
+.hero-grid{ display:grid; grid-template-columns:1.15fr .85fr; gap:2.5rem; align-items:center; position:relative; z-index:1; }
+@media (max-width:880px){ .hero-grid{ grid-template-columns:1fr; } }
+.hero h1{ font-size:clamp(2.1rem,5vw,3.4rem); margin:.7rem 0 1.1rem; color:var(--text); }
+.hero h1 em{ font-style:normal; color:var(--red); }
+.hero p.lead{ font-size:1.05rem; color:var(--muted); max-width:520px; margin-bottom:1.8rem }
+.hero-ctas{display:flex; gap:.8rem; flex-wrap:wrap}
 
-/* ════════════════════════════════════════════════════════════
-   TICKER
-═══════════════════════════════════════════════════════════ */
-.ticker-wrap{
-  position:relative; border-top:1px solid var(--steel); border-bottom:1px solid var(--steel);
-  background:var(--bg-2); overflow:hidden; padding:.85rem 0;
+.hero-diagram{ display:flex; align-items:center; justify-content:center; }
+.hero-diagram svg{ width:100%; max-width:340px; opacity:.9 }
+
+.stat-row{
+  display:grid; grid-template-columns:repeat(4,1fr); gap:1.5rem;
+  margin-top:2.6rem; padding-top:1.8rem; border-top:1px solid var(--border);
+  position:relative; z-index:1;
 }
-.ticker{display:flex; white-space:nowrap; animation:scrollticker 28s linear infinite; width:max-content}
-.ticker span{
-  font-family:var(--f-mono); font-size:.82rem; letter-spacing:.08em; color:var(--muted);
-  padding:0 2.4rem; border-right:1px solid var(--steel); text-transform:uppercase;
-}
-.ticker span b{color:var(--gold); font-weight:700}
-@keyframes scrollticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@media (max-width:760px){ .stat-row{ grid-template-columns:repeat(2,1fr); } }
+.stat-num{ font-family:var(--f-display); font-size:1.9rem; font-weight:700; color:var(--text); font-variant-numeric:tabular-nums; }
+.stat-num .accent{ color:var(--accent); }
+.stat-cap{ font-size:.74rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-top:.2rem; }
 
 /* ════════════════════════════════════════════════════════════
    PREDICTION ENGINE
 ═══════════════════════════════════════════════════════════ */
-.engine-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:3rem; align-items:center}
+.engine-grid{display:grid; grid-template-columns:1.1fr 1fr; gap:2.6rem; align-items:center}
 @media (max-width:880px){.engine-grid{grid-template-columns:1fr}}
-.engine-grid p{color:var(--muted); margin-bottom:1.2rem}
-.feature-bars{display:flex; flex-direction:column; gap:.65rem; margin-top:1.6rem}
-.fb-row{display:grid; grid-template-columns:140px 1fr 48px; align-items:center; gap:.8rem}
-.fb-label{font-family:var(--f-mono); font-size:.72rem; color:var(--muted); text-transform:uppercase}
-.fb-track{height:7px; background:var(--steel-2); position:relative; overflow:hidden}
-.fb-fill{height:100%; background:linear-gradient(90deg,var(--red),var(--gold)); width:0; transition:width 1.1s cubic-bezier(.2,.8,.2,1)}
-.fb-val{font-family:var(--f-mono); font-size:.75rem; color:var(--gold); text-align:right}
-.proof-frame{position:relative}
-.proof-frame img{filter:brightness(1.05) contrast(1.05)}
-.proof-cap{
-  font-family:var(--f-mono); font-size:.68rem; letter-spacing:.1em; color:var(--muted);
-  text-transform:uppercase; padding:.8rem 1rem; border-top:1px solid var(--steel);
-}
+.engine-grid > div > p{color:var(--muted); margin-bottom:1.1rem; font-size:.95rem}
+.feature-bars{display:flex; flex-direction:column; gap:.55rem; margin-top:1.4rem}
+.fb-row{display:grid; grid-template-columns:120px 1fr 44px; align-items:center; gap:.7rem}
+.fb-label{font-size:.78rem; color:var(--text-soft); font-variant-numeric:tabular-nums}
+.fb-track{height:6px; background:var(--bg-2); border-radius:3px; overflow:hidden}
+.fb-fill{height:100%; background:var(--red); width:0; transition:width 1s cubic-bezier(.2,.8,.2,1); border-radius:3px}
+.fb-val{font-size:.78rem; color:var(--text-soft); text-align:right; font-variant-numeric:tabular-nums}
+.proof-frame img{ border-bottom:1px solid var(--border) }
+.proof-cap{ font-size:.78rem; color:var(--muted); padding:.75rem 1.1rem; }
 
 /* ════════════════════════════════════════════════════════════
    CLUSTERING / ARCHETYPES
 ═══════════════════════════════════════════════════════════ */
-.archetypes{display:grid; grid-template-columns:repeat(3,1fr); gap:1.4rem}
+.archetypes{display:grid; grid-template-columns:repeat(3,1fr); gap:1.1rem}
 @media (max-width:880px){.archetypes{grid-template-columns:1fr}}
-.arch-card{padding:2rem 1.6rem; position:relative}
-.arch-glyph{width:46px; height:46px; margin-bottom:1.2rem; position:relative}
-.arch-card h3{font-size:1.3rem; margin-bottom:.6rem; letter-spacing:.02em}
-.arch-card p{color:var(--muted); font-size:.9rem}
-.arch-tag{
-  font-family:var(--f-mono); font-size:.65rem; letter-spacing:.15em; text-transform:uppercase;
-  position:absolute; top:1.4rem; right:1.6rem; color:var(--muted);
-}
-.arch-card.r h3{color:var(--red)} .arch-card.r .arch-glyph{border:2px solid var(--red); border-radius:50%}
-.arch-card.g h3{color:var(--gold)} .arch-card.g .arch-glyph{border:2px solid var(--gold); transform:rotate(45deg)}
-.arch-card.b h3{color:var(--blue)} .arch-card.b .arch-glyph{border:2px solid var(--blue); clip-path:polygon(50% 0,100% 100%,0 100%)}
+.arch-card{padding:1.5rem 1.4rem; border-top:3px solid var(--border)}
+.arch-card.r{border-top-color:var(--red)}
+.arch-card.g{border-top-color:var(--accent)}
+.arch-card.b{border-top-color:var(--blue)}
+.arch-num{font-size:.74rem; color:var(--muted); font-weight:700; letter-spacing:.04em; margin-bottom:.6rem}
+.arch-card h3{font-size:1.15rem; margin-bottom:.5rem; font-weight:600}
+.arch-card p{color:var(--muted); font-size:.88rem}
 
 /* ════════════════════════════════════════════════════════════
    VERSUS / COMPARISON
 ═══════════════════════════════════════════════════════════ */
-.vs-panel{position:relative; display:grid; grid-template-columns:1fr 1fr; min-height:340px; border:1px solid var(--steel)}
+.vs-panel{position:relative; display:grid; grid-template-columns:1fr auto 1fr; border:1px solid var(--border); border-radius:6px; overflow:hidden}
 @media (max-width:760px){.vs-panel{grid-template-columns:1fr}}
-.vs-side{padding:2.4rem 2.2rem; position:relative; display:flex; flex-direction:column; justify-content:center}
-.vs-side.red{background:linear-gradient(120deg,rgba(229,62,62,.14),transparent 70%)}
-.vs-side.blue{background:linear-gradient(240deg,rgba(49,130,206,.14),transparent 70%)}
-.vs-side .corner{font-family:var(--f-mono); font-size:.68rem; letter-spacing:.2em; text-transform:uppercase; margin-bottom:.5rem}
+.vs-side{padding:1.8rem 1.8rem; display:flex; flex-direction:column}
+.vs-side .corner{font-size:.74rem; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:.5rem}
 .vs-side.red .corner{color:var(--red)} .vs-side.blue .corner{color:var(--blue)}
-.vs-side h3{font-size:1.7rem; margin-bottom:1rem}
-.vs-stat{display:flex; justify-content:space-between; font-family:var(--f-mono); font-size:.85rem; padding:.4rem 0; border-bottom:1px solid var(--steel-2)}
+.vs-side h3{font-size:1.4rem; margin-bottom:1rem; font-weight:600}
+.vs-stat{display:flex; justify-content:space-between; font-size:.88rem; padding:.45rem 0; border-bottom:1px solid var(--border); font-variant-numeric:tabular-nums}
 .vs-stat .v{color:var(--text); font-weight:700}
-.vs-divider{
-  position:absolute; left:50%; top:0; bottom:0; width:1px; background:var(--steel); z-index:2;
-  display:flex; align-items:center; justify-content:center;
-}
-@media (max-width:760px){.vs-divider{display:none}}
-.vs-divider span{
-  position:absolute; background:var(--bg); border:1px solid var(--gold); color:var(--gold);
-  font-family:var(--f-display); font-size:.85rem; padding:.5rem .7rem; clip-path:polygon(6px 0,100% 0,100% 100%,0 100%,0 6px);
-}
-.proba-bar{display:flex; height:8px; margin-top:1.6rem}
+.vs-mid{display:flex; align-items:center; justify-content:center; background:var(--bg-2); padding:0 1.2rem; font-family:var(--f-display); font-weight:700; color:var(--muted); border-left:1px solid var(--border); border-right:1px solid var(--border)}
+@media (max-width:760px){.vs-mid{display:none}}
+.proba-bar{display:flex; height:6px; margin-top:1.4rem; border-radius:3px; overflow:hidden}
 .proba-bar .r{background:var(--red)} .proba-bar .b{background:var(--blue); flex:1}
+.proba-caption{display:flex; justify-content:space-between; font-size:.82rem; margin-top:.5rem}
 
 /* ════════════════════════════════════════════════════════════
    3D SHOWCASE
 ═══════════════════════════════════════════════════════════ */
-.showcase{background:var(--bg-2); border-top:1px solid var(--steel); border-bottom:1px solid var(--steel)}
-.showcase-frame{position:relative; border:1px solid var(--steel); background:var(--bg)}
-.showcase-frame .hud-corner{position:absolute; width:22px; height:22px; border-color:var(--gold)}
-.showcase-frame .hud-corner.tl{top:-1px;left:-1px;border-top:2px solid var(--gold);border-left:2px solid var(--gold)}
-.showcase-frame .hud-corner.tr{top:-1px;right:-1px;border-top:2px solid var(--gold);border-right:2px solid var(--gold)}
-.showcase-frame .hud-corner.bl{bottom:-1px;left:-1px;border-bottom:2px solid var(--gold);border-left:2px solid var(--gold)}
-.showcase-frame .hud-corner.br{bottom:-1px;right:-1px;border-bottom:2px solid var(--gold);border-right:2px solid var(--gold)}
-.showcase-frame img{width:100%}
-.showcase-label{
-  display:flex; justify-content:space-between; align-items:center;
-  font-family:var(--f-mono); font-size:.72rem; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--muted); padding:.9rem 1.1rem; border-top:1px solid var(--steel);
-}
-.live-dot{width:7px;height:7px;border-radius:50%;background:var(--red); display:inline-block; margin-right:.5rem; animation:livepulse 1.4s ease-in-out infinite}
-@keyframes livepulse{0%,100%{opacity:1}50%{opacity:.3}}
+.showcase{background:var(--bg-2); border-top:1px solid var(--border); border-bottom:1px solid var(--border)}
+.showcase-frame img{width:100%; border-bottom:1px solid var(--border)}
+.showcase-label{display:flex; justify-content:space-between; align-items:center; font-size:.82rem; color:var(--muted); padding:.85rem 1.1rem}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--red); display:inline-block; margin-right:.5rem}
 
 /* ════════════════════════════════════════════════════════════
    PIPELINE
 ═══════════════════════════════════════════════════════════ */
-.pipeline{position:relative; display:flex; gap:0; margin-top:2rem}
-.pipeline::before{
-  content:''; position:absolute; top:22px; left:0; right:0; height:1px;
-  background:linear-gradient(90deg,var(--red),var(--gold),var(--blue));
-}
-.pl-step{flex:1; position:relative; padding-top:3.2rem; text-align:center}
+.pipeline{position:relative; display:flex; gap:0; margin-top:1.8rem}
+.pipeline::before{ content:''; position:absolute; top:13px; left:0; right:0; height:1px; background:var(--border); }
+.pl-step{flex:1; position:relative; padding-top:2.6rem; text-align:center; padding-left:.5rem; padding-right:.5rem}
 .pl-step .node{
-  position:absolute; top:14px; left:50%; transform:translateX(-50%);
-  width:18px; height:18px; background:var(--bg); border:2px solid var(--gold);
-  clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);
+  position:absolute; top:6px; left:50%; transform:translateX(-50%);
+  width:14px; height:14px; background:var(--bg); border:2px solid var(--text-soft); border-radius:50%;
 }
-.pl-step .num{font-family:var(--f-mono); color:var(--gold); font-size:.75rem; margin-bottom:.4rem}
-.pl-step h4{font-size:1rem; text-transform:uppercase; letter-spacing:.05em; margin-bottom:.5rem; font-family:var(--f-body); font-weight:800}
-.pl-step p{font-size:.82rem; color:var(--muted)}
+.pl-step .num{color:var(--muted); font-size:.74rem; font-weight:700; margin-bottom:.3rem}
+.pl-step h4{font-size:.92rem; margin-bottom:.4rem; font-weight:700; font-family:var(--f-body)}
+.pl-step p{font-size:.8rem; color:var(--muted)}
 @media (max-width:880px){
-  .pipeline{flex-direction:column; gap:2rem}
-  .pipeline::before{top:0; bottom:0; left:22px; right:auto; width:1px; height:auto; background:linear-gradient(180deg,var(--red),var(--gold),var(--blue))}
-  .pl-step{padding-top:0; padding-left:3.2rem; text-align:left}
-  .pl-step .node{top:2px; left:14px; transform:none}
+  .pipeline{flex-direction:column; gap:1.6rem}
+  .pipeline::before{top:0; bottom:0; left:6px; right:auto; width:1px; height:auto}
+  .pl-step{padding-top:0; padding-left:2.4rem; text-align:left}
+  .pl-step .node{top:2px; left:0; transform:none}
 }
 
 /* ════════════════════════════════════════════════════════════
    FINAL CTA
 ═══════════════════════════════════════════════════════════ */
-.final-cta{
-  position:relative; text-align:center; padding:8rem 1.5rem; overflow:hidden;
-  background:radial-gradient(ellipse 60% 80% at 50% 100%, rgba(229,62,62,.12), transparent 70%);
-}
-.final-cta h2{font-size:clamp(2.2rem,6vw,4rem); margin-bottom:1.2rem}
-.final-cta p{color:var(--muted); margin-bottom:2.2rem}
+.final-cta{ text-align:center; padding:5rem 1.5rem; border-top:1px solid var(--border) }
+.final-cta h2{font-size:clamp(1.8rem,4.4vw,2.8rem); margin-bottom:.9rem}
+.final-cta p{color:var(--muted); margin-bottom:1.8rem}
 
 footer{
-  text-align:center; padding:2.4rem 1.5rem; color:var(--muted); font-size:.78rem;
-  border-top:1px solid var(--steel); font-family:var(--f-mono); letter-spacing:.05em;
+  text-align:center; padding:2rem 1.5rem; color:var(--muted); font-size:.82rem;
+  border-top:1px solid var(--border);
 }
+footer a{color:var(--accent)}
 </style>
 </head>
 <body>
 
 <nav id="nav">
-  <div class="logo">⚡ FIGHTVISION<span class="dot">.</span></div>
+  <div class="logo">FIGHTVISION<span class="dot">.</span></div>
   <div class="nav-links">
     <a href="#engine">Moteur ML</a>
     <a href="#styles">Clustering</a>
     <a href="#versus">Comparatif</a>
     <a href="#showcase">3D</a>
   </div>
-  <a href="index.html" class="btn btn-ghost btn-sweep" style="padding:.6rem 1.4rem;font-size:.7rem">Lancer l'app →</a>
+  <a href="index.html" class="btn btn-ghost" style="padding:.5rem 1.2rem;font-size:.82rem">Lancer l'app →</a>
 </nav>
 
 <!-- ════════════ HERO ════════════ -->
 <section class="hero">
-  <canvas id="hero-canvas"></canvas>
-  <div class="vignette" style="z-index:1"></div>
-  <div class="hero-content">
-    <div class="eyebrow">FightVision // Intelligence de combat</div>
-    <h1>Prédire le combat<br>avant le gong</h1>
-    <p class="lead">Machine learning entraîné sur 6&nbsp;012 combats UFC, clustering des styles de combat et octogone 3D interactif — pour lire un main event comme un data scientist, pas comme un parieur.</p>
-    <div class="hero-ctas">
-      <a href="index.html" class="btn btn-primary btn-sweep">⚡ Lancer une analyse</a>
-      <a href="#showcase" class="btn btn-ghost btn-sweep">Voir la démo 3D</a>
+  <div class="hero-grid">
+    <div>
+      <div class="tag">Analyse prédictive UFC</div>
+      <h1>Prédire le combat avant <em>l'opening bell</em></h1>
+      <p class="lead">Machine learning entraîné sur 6&nbsp;012 combats, clustering des styles de combat et octogone 3D interactif — pour lire un main event avec des chiffres, pas avec un pronostic.</p>
+      <div class="hero-ctas">
+        <a href="index.html" class="btn btn-primary">Lancer une analyse</a>
+        <a href="#showcase" class="btn btn-ghost">Voir la démo 3D</a>
+      </div>
+    </div>
+    <div class="hero-diagram">
+      <svg viewBox="0 0 200 200" fill="none" stroke="#3a3e4a" stroke-width="1.5">
+        <polygon points="183.2,134.4 134.4,183.2 65.6,183.2 16.8,134.4 16.8,65.6 65.6,16.8 134.4,16.8 183.2,65.6" />
+        <line x1="100" y1="16.8" x2="100" y2="183.2" stroke="#272a35" />
+        <circle cx="100" cy="100" r="3" fill="#d6263c" />
+        <circle cx="68" cy="100" r="5" stroke="#d6263c" />
+        <circle cx="132" cy="100" r="5" stroke="#1f6fc4" />
+      </svg>
     </div>
   </div>
-  <div class="scroll-hint"><span>SCROLL</span><span class="line"></span></div>
-</section>
 
-<!-- ════════════ TICKER ════════════ -->
-<div class="ticker-wrap">
-  <div class="ticker" id="ticker">
-    <!-- duplicated via JS for seamless loop -->
+  <div class="stat-row">
+    <div class="reveal"><div class="stat-num">6 012</div><div class="stat-cap">Combats analysés</div></div>
+    <div class="reveal"><div class="stat-num"><span class="accent">57.4%</span></div><div class="stat-cap">Balanced accuracy</div></div>
+    <div class="reveal"><div class="stat-num">24</div><div class="stat-cap">Features ML</div></div>
+    <div class="reveal"><div class="stat-num">3</div><div class="stat-cap">Archétypes de style</div></div>
   </div>
-</div>
+</section>
 
 <!-- ════════════ PREDICTION ENGINE ════════════ -->
 <section class="section" id="engine">
-  <div class="grid-bg"></div>
   <div class="section-head reveal">
-    <div class="eyebrow">Moteur de prédiction</div>
-    <h2>Un verdict chiffré,<br>pas une intuition</h2>
-    <p>Random Forest &amp; Gradient Boosting entraînés sur 24 features différentielles — reach, âge, précision par zone (tête / corps / jambe), temps de contrôle — avec une augmentation par inversion de coin (R↔B) pour éliminer le biais du dataset vers le favori. Chaque prédiction est traçable jusqu'à la feature qui l'a déclenchée.</p>
+    <div class="tag">Moteur de prédiction</div>
+    <h2>Un verdict chiffré, pas une intuition</h2>
+    <p>Random Forest &amp; Gradient Boosting entraînés sur 24 features différentielles — reach, âge, précision par zone (tête / corps / jambe), temps de contrôle — avec une augmentation par inversion de coin (R↔B) pour éliminer le biais du dataset vers le favori.</p>
   </div>
 
   <div class="engine-grid">
@@ -347,9 +259,10 @@ footer{
       </div>
     </div>
 
-    <div class="hud-panel proof-frame reveal">
+    <div class="card proof-frame reveal">
+      <div class="card-label">Sortie réelle du modèle</div>
       <img src="outputs/model_results.png" alt="Matrice de confusion et feature importance du modèle FightVision" />
-      <div class="proof-cap">▸ Sortie réelle — Random Forest · 1181 combats test · 57.4% balanced accuracy</div>
+      <div class="proof-cap">Random Forest · 1 181 combats test · 57.4% balanced accuracy</div>
     </div>
   </div>
 </section>
@@ -357,82 +270,86 @@ footer{
 <!-- ════════════ CLUSTERING ════════════ -->
 <section class="section" id="styles">
   <div class="section-head reveal">
-    <div class="eyebrow">Clustering des styles</div>
-    <h2>Chaque combattant<br>a un ADN de combat</h2>
-    <p>Un clustering non-supervisé regroupe les combattants par profil statistique — pas par division ou par réputation. Trois archétypes émergent et permettent de lire un matchup comme un duel de styles.</p>
+    <div class="tag">Clustering des styles</div>
+    <h2>Chaque combattant a un ADN de combat</h2>
+    <p>K-Means sur 9 stats de style (précision de frappe par zone, takedown %, KD moyen, ctrl_time, taux de finition KO/soumission) — le nombre d'archétypes (3) n'est pas choisi à l'avance, il vient du meilleur silhouette score testé entre k=2 et k=6.</p>
   </div>
 
   <div class="archetypes">
-    <div class="hud-panel arch-card r reveal">
-      <div class="arch-tag">Cluster 01</div>
-      <div class="arch-glyph"></div>
+    <div class="card arch-card r reveal">
+      <div class="arch-num">Cluster 1 · 232 fighters (27%)</div>
       <h3>Frappeur explosif</h3>
-      <p>Sig. strike % élevé, KD moyen haut, faible temps de contrôle. Cherche la finition debout.</p>
+      <p>Taux de KO le plus haut (65.5%), KD moyen le plus élevé, le moins de temps passé en contrôle au sol — termine vite et debout.</p>
     </div>
-    <div class="hud-panel arch-card g reveal">
-      <div class="arch-tag">Cluster 02</div>
-      <div class="arch-glyph"></div>
-      <h3>Contrôleur au sol</h3>
-      <p>Takedown % et ctrl_time dominants. Impose le rythme en grappling, use l'adversaire à distance.</p>
+    <div class="card arch-card g reveal">
+      <div class="arch-num">Cluster 0 · 253 fighters (30%)</div>
+      <h3>Frappeur volumineux</h3>
+      <p>Volume de frappes le plus haut sur les 3 zones (tête/corps/jambe), ctrl_time élevé — accumule plutôt que de chercher le finish.</p>
     </div>
-    <div class="hud-panel arch-card b reveal">
-      <div class="arch-tag">Cluster 03</div>
-      <div class="arch-glyph"></div>
-      <h3>Finisseur technique</h3>
-      <p>Sub_wins élevé, précision tête/corps équilibrée. Capitalise sur l'erreur adverse.</p>
+    <div class="card arch-card b reveal">
+      <div class="arch-num">Cluster 2 · 366 fighters (43%)</div>
+      <h3>Grappler / Finisseur au sol</h3>
+      <p>Takedown % et ctrl_time les plus hauts, taux de soumission le plus élevé (37.3%) — contrôle puis termine au sol.</p>
     </div>
+  </div>
+
+  <div class="card reveal" style="margin-top:1.4rem">
+    <div class="card-label">Sortie réelle — K-Means (k=3, silhouette=0.173)</div>
+    <img src="outputs/clustering_results.png" alt="Projection PCA des fighters par cluster et profil des centroïdes" style="width:100%; border-bottom:1px solid var(--border)" />
+    <div class="proof-cap">Répartition calculée sur les 851 fighters avec ≥3 combats (signal fiable) · silhouette modeste (0.17) car les styles réels se chevauchent, ce ne sont pas des catégories strictes</div>
   </div>
 </section>
 
 <!-- ════════════ VERSUS / COMPARISON ════════════ -->
 <section class="section" id="versus">
   <div class="section-head reveal">
-    <div class="eyebrow">Face-à-face</div>
-    <h2>Deux profils,<br>un seul verdict</h2>
-    <p>Exemple réel issu du dataset — chaque statistique est comparée en direct pour isoler l'avantage décisif.</p>
+    <div class="tag">Face-à-face</div>
+    <h2>Deux profils, un seul verdict</h2>
+    <p>Exemple réel issu du dataset — chaque statistique est comparée pour isoler l'avantage décisif.</p>
   </div>
 
   <div class="vs-panel reveal">
     <div class="vs-side red">
-      <div class="corner">🔴 Red corner</div>
+      <div class="corner">Red corner</div>
       <h3>Conor McGregor</h3>
+      <div class="vs-stat"><span>Style (clustering)</span><span class="v">Frappeur explosif</span></div>
       <div class="vs-stat"><span>Sig. Strike %</span><span class="v">52.0%</span></div>
       <div class="vs-stat"><span>Takedown %</span><span class="v">10.2%</span></div>
       <div class="vs-stat"><span>Reach</span><span class="v">188 cm</span></div>
       <div class="vs-stat"><span>KO Wins</span><span class="v">19</span></div>
     </div>
+    <div class="vs-mid">VS</div>
     <div class="vs-side blue">
-      <div class="corner">🔵 Blue corner</div>
+      <div class="corner">Blue corner</div>
       <h3>Khabib Nurmagomedov</h3>
+      <div class="vs-stat"><span>Style (clustering)</span><span class="v">Frappeur volumineux</span></div>
       <div class="vs-stat"><span>Sig. Strike %</span><span class="v">49.0%</span></div>
       <div class="vs-stat"><span>Takedown %</span><span class="v">53.3%</span></div>
       <div class="vs-stat"><span>Reach</span><span class="v">178 cm</span></div>
       <div class="vs-stat"><span>KO Wins</span><span class="v">8</span></div>
     </div>
-    <div class="vs-divider"><span>VS</span></div>
   </div>
   <div class="proba-bar"><div class="r" style="width:40%"></div><div class="b"></div></div>
-  <div class="showcase-label" style="border-top:none;padding:.6rem 0">
+  <div class="proba-caption">
     <span style="color:var(--red)">40% McGregor</span><span style="color:var(--blue)">60% Khabib</span>
   </div>
+  <p style="color:var(--muted); font-size:.85rem; margin-top:.9rem">Résultat volontairement contre-intuitif : Khabib, archétype du wrestler, est classé "frappeur volumineux" — le clustering regarde le volume de frappes au sol (très élevé chez lui) et son faible taux de soumission en proportion de ses victoires, pas le takedown en tant que tel. C'est le genre de nuance qu'une étiquette commerciale écraserait.</p>
 </section>
 
 <!-- ════════════ 3D SHOWCASE ════════════ -->
 <section class="showcase" id="showcase">
   <div class="section">
     <div class="section-head reveal">
-      <div class="eyebrow">Visualisation 3D</div>
-      <h2>L'octogone, en temps réel,<br>dans le navigateur</h2>
+      <div class="tag">Visualisation 3D</div>
+      <h2>L'octogone, en temps réel, dans le navigateur</h2>
       <p>Three.js rend l'octogone, les deux combattants et une heatmap des zones de frappe (tête / corps / jambe) — pivote la scène à la souris, directement dans l'application.</p>
     </div>
 
-    <div class="showcase-frame reveal">
-      <div class="hud-corner tl"></div><div class="hud-corner tr"></div>
-      <div class="hud-corner bl"></div><div class="hud-corner br"></div>
+    <div class="card showcase-frame reveal">
       <img src="outputs/fight_Conor_McGregor_vs_Khabib_Nurmagomedov.png" alt="Octogone 3D et radar FightVision — McGregor vs Khabib" />
       <div class="showcase-label">
         <span><span class="live-dot"></span>Sortie réelle du moteur d'analyse</span>
-        <a href="index.html" class="btn btn-ghost btn-sweep" style="padding:.5rem 1.2rem;font-size:.65rem">Ouvrir en interactif →</a>
+        <a href="index.html" class="btn btn-ghost" style="padding:.45rem 1rem;font-size:.78rem">Ouvrir en interactif →</a>
       </div>
     </div>
   </div>
@@ -441,8 +358,8 @@ footer{
 <!-- ════════════ PIPELINE ════════════ -->
 <section class="section">
   <div class="section-head reveal">
-    <div class="eyebrow">Comment ça marche</div>
-    <h2>Des données brutes<br>au verdict 3D</h2>
+    <div class="tag">Comment ça marche</div>
+    <h2>Des données brutes au verdict 3D</h2>
   </div>
   <div class="pipeline reveal">
     <div class="pl-step"><div class="node"></div><div class="num">01</div><h4>Dataset</h4><p>6 012 combats · 144 colonnes</p></div>
@@ -455,27 +372,15 @@ footer{
 
 <!-- ════════════ FINAL CTA ════════════ -->
 <section class="final-cta">
-  <div class="eyebrow" style="justify-content:center;margin-bottom:1.2rem"><span style="margin:0 auto">⚡ Prêt à analyser</span></div>
-  <h2>Ton prochain main event,<br>analysé en 3 secondes</h2>
+  <div class="tag" style="justify-content:center; display:inline-flex; margin-bottom:1rem">Prêt à analyser</div>
+  <h2>Ton prochain main event, analysé en 3 secondes</h2>
   <p>Choisis deux combattants. Le reste est calculé.</p>
-  <a href="index.html" class="btn btn-primary btn-sweep" style="font-size:.95rem;padding:1.1rem 2.6rem">⚡ Lancer FightVision</a>
+  <a href="index.html" class="btn btn-primary" style="font-size:.95rem;padding:.95rem 2.2rem">Lancer FightVision</a>
 </section>
 
 <footer>FightVision · Dataset UFC 6012 combats · Projet IGRV + IA · ENP Alger 2025</footer>
 
 <script>
-// ── Nav scroll state ──
-const nav = document.getElementById('nav');
-window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40));
-
-// ── Ticker content (duplicated for seamless marquee) ──
-const tickerItems = [
-  '6 012 <b>COMBATS</b> ANALYSÉS', '<b>57.4%</b> BALANCED ACCURACY', '24 <b>FEATURES</b> ML',
-  '3 <b>ARCHÉTYPES</b> DE STYLE', 'OCTOGONE <b>3D</b> TEMPS RÉEL', 'AUGMENTATION <b>MIROIR</b> R↔B'
-];
-const tickerEl = document.getElementById('ticker');
-tickerEl.innerHTML = (tickerItems.concat(tickerItems)).map(t => `<span>${t}</span>`).join('');
-
 // ── Scroll reveal ──
 const io = new IntersectionObserver(entries => {
   entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
@@ -492,76 +397,6 @@ const fbIO = new IntersectionObserver(entries => {
 }, { threshold: 0.3 });
 const fbContainer = document.getElementById('feature-bars');
 if (fbContainer) fbIO.observe(fbContainer);
-
-// ── Hero Three.js: rotating wireframe octagon + drifting particles ──
-(function () {
-  const canvas = document.getElementById('hero-canvas');
-  if (!canvas || !window.THREE) return;
-
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 100);
-  camera.position.set(0, 5, 11);
-  camera.lookAt(0, 0.5, 0);
-
-  function resize() {
-    const w = canvas.clientWidth, h = canvas.clientHeight;
-    renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    camera.aspect = w / h;
-    camera.updateProjectionMatrix();
-  }
-  resize();
-  window.addEventListener('resize', resize);
-
-  const group = new THREE.Group();
-  const SIDES = 8, R = 5, WALL_H = 2.2;
-  const pts = [];
-  for (let i = 0; i < SIDES; i++) {
-    const a = (Math.PI / SIDES) + i * (2 * Math.PI / SIDES);
-    pts.push(new THREE.Vector2(R * Math.cos(a), R * Math.sin(a)));
-  }
-  const goldMat = new THREE.LineBasicMaterial({ color: 0xf0b429, transparent: true, opacity: 0.55 });
-  const redMat  = new THREE.LineBasicMaterial({ color: 0xe53e3e, transparent: true, opacity: 0.4 });
-  for (let i = 0; i < SIDES; i++) {
-    const a0 = pts[i], a1 = pts[(i + 1) % SIDES];
-    [0, WALL_H].forEach(y => {
-      const geo = new THREE.BufferGeometry().setFromPoints([
-        new THREE.Vector3(a0.x, y, a0.y), new THREE.Vector3(a1.x, y, a1.y)
-      ]);
-      group.add(new THREE.Line(geo, y === 0 ? goldMat : redMat));
-    });
-    const poleGeo = new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(a0.x, 0, a0.y), new THREE.Vector3(a0.x, WALL_H, a0.y)
-    ]);
-    group.add(new THREE.Line(poleGeo, goldMat));
-  }
-  scene.add(group);
-
-  // drifting particles
-  const pCount = 120;
-  const pGeo = new THREE.BufferGeometry();
-  const positions = new Float32Array(pCount * 3);
-  for (let i = 0; i < pCount; i++) {
-    positions[i*3]   = (Math.random() - 0.5) * 20;
-    positions[i*3+1] = Math.random() * 6;
-    positions[i*3+2] = (Math.random() - 0.5) * 20;
-  }
-  pGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  const pMat = new THREE.PointsMaterial({ color: 0xf0b429, size: 0.045, transparent: true, opacity: 0.5 });
-  const particles = new THREE.Points(pGeo, pMat);
-  scene.add(particles);
-
-  const clock = new THREE.Clock();
-  function animate() {
-    requestAnimationFrame(animate);
-    const t = clock.getElapsedTime();
-    group.rotation.y = t * 0.08;
-    particles.rotation.y = -t * 0.02;
-    renderer.render(scene, camera);
-  }
-  animate();
-})();
 </script>
 </body>
 </html>
