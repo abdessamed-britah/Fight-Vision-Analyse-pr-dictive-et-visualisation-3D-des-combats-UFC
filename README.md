@@ -14,8 +14,9 @@ ufc_fightvision/
 ├── requirements.txt      ← Dépendances Python
 │
 ├── jour1_model.py        ← Preprocessing + ML (Random Forest / GBT)
-├── jour2_radar_3d.py     ← Radar chart + Octogone 3D (matplotlib)
-├── jour3_app.py          ← Application Streamlit complète
+├── fighters.json         ← Profils des fighters exportés pour le front
+├── landing.html          ← Page d'accueil marketing
+├── index.html            ← Application complète (prédiction + radar + octogone 3D)
 │
 └── outputs/
     ├── model.pkl         ← Modèle sauvegardé (généré par jour1)
@@ -33,9 +34,9 @@ pip install -r requirements.txt
 
 ---
 
-## 🚀 Utilisation — 3 étapes
+## 🚀 Utilisation
 
-### JOUR 1 — Entraîner le modèle ML
+### Entraîner le modèle ML
 ```bash
 python jour1_model.py
 ```
@@ -44,21 +45,13 @@ python jour1_model.py
 - Sauvegarde le meilleur modèle dans `outputs/model.pkl`
 - Affiche confusion matrix + feature importance
 
-### JOUR 2 — Visualisations standalone
+### Lancer l'application web
 ```bash
-python jour2_radar_3d.py
+npx serve .
 ```
-- Génère un radar chart comparatif (2 fighters)
-- Génère l'octogone 3D avec heatmap des zones de frappe
-- Modifie `FIGHTER_1` et `FIGHTER_2` dans le script
-
-### JOUR 3 — Application complète
-```bash
-streamlit run jour3_app.py
-```
-- Interface web interactive
-- Sélection de 2 fighters → prédiction + visualisations
-- Fiche détaillée des combattants
+- Ouvrir `landing.html` (page d'accueil) ou `index.html` (application)
+- Sélection de 2 fighters → prédiction + radar Canvas 2D + octogone 3D Three.js
+- Servir en HTTP local est nécessaire (le `fetch('fighters.json')` échoue en `file://`)
 
 ---
 
@@ -75,18 +68,25 @@ streamlit run jour3_app.py
 - Précision par zone : HEAD, BODY, LEG (pour R et B)
 - Style : stance (Orthodox / Southpaw / Switch)
 
-**Performance attendue :** ~65–70% d'accuracy (cohérent avec la littérature)
+**Performance réelle (après augmentation par inversion de coin R↔B) :**
+- Accuracy : ~63% · Balanced accuracy : ~57% · Macro F1 : ~0.58
+- Le dataset brut est déséquilibré (Red gagne 67% des combats car le coin Red
+  correspond historiquement au favori). Sans correction, un modèle atteint
+  68% d'accuracy en prédisant quasi toujours Red (recall Blue ~16%) — un
+  score trompeur. L'augmentation par inversion de coin rééquilibre les
+  classes à l'entraînement et force le modèle à apprendre une vraie
+  différence de niveau plutôt qu'un biais de corner.
 
 ---
 
 ## 🎨 Partie IGRV
 
-### Radar Chart (polar)
-Comparaison de 6 attributs normalisés entre les 2 fighters, fond sombre, couleurs UFC (rouge/bleu).
+### Radar Chart (Canvas 2D)
+Comparaison de 6 attributs normalisés entre les 2 fighters, fond sombre, couleurs UFC (rouge/bleu) — dans `index.html`.
 
-### Octogone 3D (Matplotlib 3D)
-- Modélisation géométrique de l'octogone (8 faces + cage)
-- Heatmap des zones de frappe projetée sur le sol (cercles proportionnels)
+### Octogone 3D (Three.js)
+- Modélisation géométrique de l'octogone (8 faces + cage) interactive (drag à la souris)
+- Heatmap des zones de frappe projetée sur le sol (sphères proportionnelles)
 - Silhouettes 3D des 2 fighters positionnées dans l'octogone
 - Couleur des fighters = probabilité ML de victoire
 

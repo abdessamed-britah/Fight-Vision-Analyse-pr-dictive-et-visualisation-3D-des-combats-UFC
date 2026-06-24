@@ -12,7 +12,11 @@ warnings.filterwarnings('ignore')
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score, balanced_accuracy_score, f1_score,
+    classification_report, confusion_matrix
+)
+from sklearn.utils import shuffle
 import seaborn as sns
 import joblib
 import os
@@ -103,6 +107,35 @@ X_train, X_test, y_train, y_test = train_test_split(
 print(f"\n   Train : {len(X_train)} | Test : {len(X_test)}")
 
 # ─────────────────────────────────────────────────────────────
+# 4bis. AUGMENTATION PAR INVERSION DE COIN (R ↔ B)
+# ─────────────────────────────────────────────────────────────
+# Le dataset est déséquilibré (Red gagne ~67% des combats) car le coin Red
+# correspond historiquement au favori. Les modèles entraînés tels quels
+# apprennent surtout "prédire Red" plutôt qu'une vraie différence de niveau
+# (recall Blue Win ~16%). On corrige ça en dupliquant chaque combat
+# d'entraînement avec les coins inversés : les features différentielles
+# (R - B) sont négées et le label est inversé. Ça rééquilibre parfaitement
+# les classes et double les données, sans toucher au jeu de test.
+DIFF_COLS = [c for c in X.columns if c.endswith('_diff')]
+SWAP_PAIRS = [('R_head_acc', 'B_head_acc'), ('R_body_acc', 'B_body_acc'),
+              ('R_leg_acc', 'B_leg_acc'), ('R_stance', 'B_stance')]
+
+def mirror_corners(X_subset):
+    Xm = X_subset.copy()
+    for c in DIFF_COLS:
+        Xm[c] = -Xm[c]
+    for a, b in SWAP_PAIRS:
+        Xm[a], Xm[b] = X_subset[b].values, X_subset[a].values
+    return Xm
+
+X_train_aug = pd.concat([X_train, mirror_corners(X_train)], ignore_index=True)
+y_train_aug = pd.concat([y_train, 1 - y_train], ignore_index=True)
+X_train_aug, y_train_aug = shuffle(X_train_aug, y_train_aug, random_state=42)
+
+print(f"   Après augmentation miroir : {len(X_train_aug)} combats d'entraînement "
+      f"(Red {y_train_aug.sum()} / Blue {(y_train_aug==0).sum()})")
+
+# ─────────────────────────────────────────────────────────────
 # 5. MODÈLES
 # ─────────────────────────────────────────────────────────────
 print("\n🤖 Entraînement des modèles...")
@@ -114,17 +147,21 @@ models = {
 
 results = {}
 for name, model in models.items():
-    model.fit(X_train, y_train)
-    preds = model.predict(X_test)
-    acc   = accuracy_score(y_test, preds)
-    results[name] = {"model": model, "acc": acc, "preds": preds}
-    print(f"   {name:25s} — Accuracy : {acc:.4f} ({acc*100:.1f}%)")
+    model.fit(X_train_aug, y_train_aug)
+    preds    = model.predict(X_test)
+    acc      = accuracy_score(y_test, preds)
+    bal_acc  = balanced_accuracy_score(y_test, preds)
+    macro_f1 = f1_score(y_test, preds, average='macro')
+    results[name] = {"model": model, "acc": acc, "bal_acc": bal_acc, "macro_f1": macro_f1, "preds": preds}
+    print(f"   {name:25s} — Accuracy : {acc:.4f} | Balanced Acc : {bal_acc:.4f} | Macro F1 : {macro_f1:.4f}")
 
-# Meilleur modèle
-best_name  = max(results, key=lambda k: results[k]['acc'])
+# Meilleur modèle : sélection par balanced accuracy (l'accuracy brute favorise
+# artificiellement un modèle qui sur-prédit la classe majoritaire)
+best_name  = max(results, key=lambda k: results[k]['bal_acc'])
 best_model = results[best_name]['model']
 best_preds = results[best_name]['preds']
-print(f"\n🏆 Meilleur modèle : {best_name} ({results[best_name]['acc']*100:.1f}%)")
+print(f"\n🏆 Meilleur modèle : {best_name} "
+      f"(Accuracy {results[best_name]['acc']*100:.1f}% | Balanced Acc {results[best_name]['bal_acc']*100:.1f}%)")
 
 # ─────────────────────────────────────────────────────────────
 # 6. RAPPORT DE CLASSIFICATION
@@ -201,4 +238,4 @@ if profile:
         print(f"   {k:15s}: {v}")
 
 print("\n✅ JOUR 1 TERMINÉ — Modèle prêt, profils extraits.")
-print("   → Lance maintenant : python jour2_radar_3d.py")
+print("   → Ouvre index.html (servi en HTTP local) pour l'application.")

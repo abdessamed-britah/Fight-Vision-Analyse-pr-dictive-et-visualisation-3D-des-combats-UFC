@@ -4,5 +4,4 @@ matplotlib
 seaborn
 scikit-learn
 xgboost
-streamlit
 joblib
